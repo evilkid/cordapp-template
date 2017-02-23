@@ -67,7 +67,11 @@ task deployNodes(type: net.corda.plugins.Cordform, dependsOn: ['build']) {
         artemisPort 10004
         webPort 10005
         cordapps = []
-        rpcUsers = [[ user: "user1", "password": "test", "permissions": []]]
+        rpcUsers = [
+                ['user' : "user1",
+                 'password' : "test",
+                 'permissions' : ["StartFlow.net.corda.flows.CashFlow"]]
+        ]
     }
     node {
         name "NodeB"
@@ -76,16 +80,27 @@ task deployNodes(type: net.corda.plugins.Cordform, dependsOn: ['build']) {
         artemisPort 10006
         webPort 10007
         cordapps = []
-        rpcUsers = [[ user: "user1", "password": "test", "permissions": []]]
+        rpcUsers = [
+                ['user' : "user1",
+                 'password' : "test",
+                 'permissions' : ["StartFlow.net.corda.flows.CashFlow"]]
+        ]
     }
     node {
         name "NodeC"
         nearestCity "San Francisco"
-        advertisedServices = []
+        advertisedServices = ["corda.issuer.USD"]
         artemisPort 10008
         webPort 10009
         cordapps = []
-        rpcUsers = [[ user: "user1", "password": "test", "permissions": []]]
+        rpcUsers = [
+                ['user' : "user1",
+                 'password' : "test",
+                 'permissions' : [
+                         "StartFlow.net.corda.flows.CashFlow",
+                         "StartFlow.net.corda.flows.IssuerFlow\$IssuanceRequester"
+                 ]]
+        ]
     }
 }
 

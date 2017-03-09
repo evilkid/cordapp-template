@@ -9,9 +9,8 @@ repositories {
     mavenLocal()
     mavenCentral()
     jcenter()
-    maven {
-        url 'https://dl.bintray.com/kotlin/exposed'
-    }
+    maven { url 'https://dl.bintray.com/kotlin/exposed' }
+    maven { url 'https://jitpack.io' }
 }
 
 sourceSets {
@@ -20,11 +19,7 @@ sourceSets {
             srcDir "../config/dev"
         }
     }
-    test {
-        resources {
-            srcDir "../config/test"
-        }
-    }
+
 }
 
 dependencies {
@@ -36,10 +31,12 @@ dependencies {
     compile "net.corda:core:$corda_version"
     compile "net.corda:finance:$corda_version"
     compile "net.corda:node:$corda_version"
-    compile "net.corda:corda:$corda_version"
-    compile "net.corda:test-utils:$corda_version"
+    runtime "net.corda:corda:$corda_version"
+    runtime "net.corda:corda-webserver:$corda_version"
 
-    // GraphStream: For visualisation (required by ExampleClientRPC app)
+    testCompile "net.corda:test-utils:$corda_version"
+
+    // GraphStream: For visualisation (required by TemplateClientRPC app)
     compile "org.graphstream:gs-core:1.3"
     compile("org.graphstream:gs-ui:1.3") {
         exclude group: "bouncycastle"
@@ -67,7 +64,11 @@ task deployNodes(type: net.corda.plugins.Cordform, dependsOn: ['build']) {
         artemisPort 10004
         webPort 10005
         cordapps = []
-        rpcUsers = [[ user: "user1", "password": "test", "permissions": []]]
+        rpcUsers = [
+                ['user' : "user1",
+                 'password' : "test",
+                 'permissions' : ["StartFlow.net.corda.flows.CashPaymentFlow"]]
+        ]
     }
     node {
         name "NodeB"
@@ -76,16 +77,27 @@ task deployNodes(type: net.corda.plugins.Cordform, dependsOn: ['build']) {
         artemisPort 10006
         webPort 10007
         cordapps = []
-        rpcUsers = [[ user: "user1", "password": "test", "permissions": []]]
+        rpcUsers = [
+                ['user' : "user1",
+                 'password' : "test",
+                 'permissions' : ["StartFlow.net.corda.flows.CashPaymentFlow"]]
+        ]
     }
     node {
         name "NodeC"
         nearestCity "San Francisco"
-        advertisedServices = []
+        advertisedServices = ["corda.issuer.USD"]
         artemisPort 10008
         webPort 10009
         cordapps = []
-        rpcUsers = [[ user: "user1", "password": "test", "permissions": []]]
+        rpcUsers = [
+                ['user' : "user1",
+                 'password' : "test",
+                 'permissions' : [
+                         "StartFlow.net.corda.flows.CashPaymentFlow",
+                         "StartFlow.net.corda.flows.IssuerFlow\$IssuanceRequester"
+                 ]]
+        ]
     }
 }
 
@@ -118,8 +130,8 @@ publishing {
     }
 }
 
-task runExampleClientRPC(type: JavaExec) {
+task runTemplateClientRPC(type: JavaExec) {
     classpath = sourceSets.main.runtimeClasspath
-    main = 'com.example.client.ExampleClientRPC'
+    main = 'com.template.client.TemplateClientRPC'
     args 'localhost:10004'
 }

@@ -1,17 +1,14 @@
 package com.example.plugin;
 
-import com.esotericsoftware.kryo.Kryo;
 import com.example.api.ExampleApi;
-import com.example.contract.PurchaseOrderContract;
-import com.example.contract.PurchaseOrderState;
-import com.example.flow.ExampleFlow;
-import com.example.model.PurchaseOrder;
-import com.example.service.ExampleService;
+import net.corda.core.contracts.Amount;
 import net.corda.core.crypto.Party;
-import net.corda.core.flows.IllegalFlowLogicException;
 import net.corda.core.messaging.CordaRPCOps;
 import net.corda.core.node.CordaPluginRegistry;
 import net.corda.core.node.PluginServiceHub;
+import net.corda.core.serialization.OpaqueBytes;
+import net.corda.flows.AbstractCashFlow;
+import net.corda.flows.IssuerFlow;
 
 import java.util.*;
 import java.util.function.Function;
@@ -36,10 +33,12 @@ public class ExamplePlugin extends CordaPluginRegistry {
      * here, then the flow state machine will _not_ invoke the flow. Instead, an exception will be raised.
      */
     private final Map<String, Set<String>> requiredFlows = Collections.singletonMap(
-            ExampleFlow.Initiator.class.getName(),
+            IssuerFlow.IssuanceRequester.class.getName(),
             new HashSet<>(Arrays.asList(
-                    PurchaseOrderState.class.getName(),
-                    Party.class.getName()
+                    AbstractCashFlow.class.getName(),
+                    Party.class.getName(),
+                    Amount.class.getName(),
+                    OpaqueBytes.class.getName()
             )));
 
     /**
@@ -47,14 +46,14 @@ public class ExamplePlugin extends CordaPluginRegistry {
      * factories that would be used when an initiating party attempts to communicate with our node using a particular
      * flow. See the [ExampleService.Service] class for an implementation.
      */
-    private final List<Function<PluginServiceHub, ?>> servicePlugins = Collections.singletonList(ExampleService::new);
+    private final List<Function<PluginServiceHub, ?>> servicePlugins = Collections.singletonList(IssuerFlow.Issuer.Service::new);
 
     /**
      * A list of directories in the resources directory that will be served by Jetty under /web.
      */
     private final Map<String, String> staticServeDirs = Collections.singletonMap(
             // This will serve the exampleWeb directory in resources to /web/example
-            "example", getClass().getClassLoader().getResource("exampleWeb").toExternalForm()
+            "example", getClass().getClassLoader().getResource("templateWeb").toExternalForm()
     );
 
     @Override public List<Function<CordaRPCOps, ?>> getWebApis() { return webApis; }
@@ -65,17 +64,6 @@ public class ExamplePlugin extends CordaPluginRegistry {
     /**
      * Register required types with Kryo (our serialisation framework).
      */
-    @Override public boolean registerRPCKryoTypes(Kryo kryo) {
-        kryo.register(PurchaseOrderState.class);
-        kryo.register(PurchaseOrderContract.class);
-        kryo.register(PurchaseOrder.class);
-        kryo.register(PurchaseOrder.Address.class);
-        kryo.register(Date.class);
-        kryo.register(PurchaseOrder.Item.class);
-        kryo.register(ExampleFlow.ExampleFlowResult.Success.class);
-        kryo.register(ExampleFlow.ExampleFlowResult.Failure.class);
-        kryo.register(IllegalArgumentException.class);
-        kryo.register(IllegalFlowLogicException.class);
-        return true;
-    }
+
+
 }

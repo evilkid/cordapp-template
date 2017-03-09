@@ -42,6 +42,7 @@ public class ExampleApi {
         this.services = services;
         updatePeers();
         updateIssuers();
+        updateNotaries();
     }
 
     @GET
@@ -124,6 +125,19 @@ public class ExampleApi {
     }
 
     @GET
+    @Path("notaries ")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<Party> getNotaryList() {
+        /*new CashCommand.IssueCash(new Amount<Currency>(10, ContractsDSL.USD), OpaqueBytes.Companion.of(1), services.nodeIdentity().getLegalIdentity() );
+        services.currentNodeTime();*/
+        //return "test " + new NetworkIdentityModel().getNotaries().size();
+        if (notaries.isEmpty()) {
+            updateNotaries();
+        }
+        return notaries;
+    }
+
+    @GET
     @Path("me")
     @Produces(MediaType.APPLICATION_JSON)
     public Map<String, String> whoami() {
@@ -148,6 +162,20 @@ public class ExampleApi {
                     nodeInfo.getAdvertisedServices()) {
                 if (serviceEntry.getInfo().getType().getId().contains("corda.issuer.")) {
                     issuers.add(nodeInfo.getLegalIdentity());
+                }
+            }
+        }
+    }
+
+    private void updateNotaries() {
+        notaries = new ArrayList<>();
+
+        for (NodeInfo nodeInfo :
+                services.networkMapUpdates().getFirst()) {
+            for (ServiceEntry serviceEntry :
+                    nodeInfo.getAdvertisedServices()) {
+                if (serviceEntry.getInfo().getType().isNotary()) {
+                    notaries.add(nodeInfo.getNotaryIdentity());
                 }
             }
         }

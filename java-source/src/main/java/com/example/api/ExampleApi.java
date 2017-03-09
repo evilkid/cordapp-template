@@ -68,7 +68,6 @@ public class ExampleApi {
         }
     }
 
-
     @GET
     @Path("pay/{peerName}/{amount}")
     public String pay(@PathParam("peerName") String peerName, @PathParam("amount") int quantity) {
@@ -87,8 +86,6 @@ public class ExampleApi {
             CashFlowCommand.PayCash cash = new CashFlowCommand.PayCash(amount, party);
 
             FlowHandle handle = cash.startFlow(services);
-
-            //handle.getProgress().subscribe(o -> System.out.println("done " + o));
 
             //SignedTransaction a = new SignedTransaction();
             System.out.println(handle.getReturnValue().get().getClass());

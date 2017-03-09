@@ -22,13 +22,13 @@ public class ExamplePlugin extends CordaPluginRegistry {
     /**
      * A list of flows required for this CorDapp. Any flow which is invoked from from the web API needs to be
      * registered as an entry into this map. The map takes the form:
-     *
+     * <p>
      * Name of the flow to be invoked -> Set of the parameter types passed into the flow.
-     *
+     * <p>
      * E.g. In the case of this CorDapp:
-     *
+     * <p>
      * "ExampleFlow.Initiator" -> Set(PurchaseOrderState, Party)
-     *
+     * <p>
      * This map also acts as a white list. If a flow is invoked via the API and not registered correctly
      * here, then the flow state machine will _not_ invoke the flow. Instead, an exception will be raised.
      */
@@ -56,10 +56,25 @@ public class ExamplePlugin extends CordaPluginRegistry {
             "example", getClass().getClassLoader().getResource("templateWeb").toExternalForm()
     );
 
-    @Override public List<Function<CordaRPCOps, ?>> getWebApis() { return webApis; }
-    @Override public Map<String, Set<String>> getRequiredFlows() { return requiredFlows; }
-    @Override public List<Function<PluginServiceHub, ?>> getServicePlugins() { return servicePlugins; }
-    @Override public Map<String, String> getStaticServeDirs() { return staticServeDirs; }
+    @Override
+    public List<Function<CordaRPCOps, ?>> getWebApis() {
+        return webApis;
+    }
+
+    @Override
+    public Map<String, Set<String>> getRequiredFlows() {
+        return requiredFlows;
+    }
+
+    @Override
+    public List<Function<PluginServiceHub, ?>> getServicePlugins() {
+        return servicePlugins;
+    }
+
+    @Override
+    public Map<String, String> getStaticServeDirs() {
+        return staticServeDirs;
+    }
 
     /**
      * Register required types with Kryo (our serialisation framework).

@@ -6,7 +6,6 @@ import net.corda.core.crypto.Party;
 import net.corda.core.messaging.CordaRPCOps;
 import net.corda.core.messaging.FlowHandle;
 import net.corda.core.node.NodeInfo;
-import net.corda.core.node.ServiceEntry;
 import net.corda.core.serialization.OpaqueBytes;
 import net.corda.flows.CashFlowCommand;
 import net.corda.flows.IssuerFlow;
@@ -20,8 +19,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import static java.util.stream.Collectors.toList;
 import static java.util.Collections.singletonMap;
+import static java.util.stream.Collectors.toList;
 
 // This API is accessible from /api/example. All paths specified below are relative to it.
 @Path("example")

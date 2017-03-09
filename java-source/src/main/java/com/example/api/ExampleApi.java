@@ -1,13 +1,11 @@
 package com.example.api;
 
-import net.corda.core.contracts.Amount;
-import net.corda.core.contracts.ContractsDSL;
-import net.corda.core.contracts.Issued;
-import net.corda.core.contracts.PartyAndReference;
+import net.corda.core.contracts.*;
 import net.corda.core.crypto.Party;
 import net.corda.core.messaging.CordaRPCOps;
 import net.corda.core.messaging.FlowHandle;
 import net.corda.core.node.NodeInfo;
+import net.corda.core.node.ServiceEntry;
 import net.corda.core.serialization.OpaqueBytes;
 import net.corda.flows.CashFlowCommand;
 import net.corda.flows.IssuerFlow;
@@ -43,6 +41,7 @@ public class ExampleApi {
         this.myLegalName = services.nodeIdentity().getLegalIdentity().getName();
         this.services = services;
         updatePeers();
+        updateIssuers();
     }
 
     @GET
@@ -97,6 +96,21 @@ public class ExampleApi {
     }
 
     @GET
+    @Path("vault")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<StateAndRef<ContractState>> getPurchaseOrders() {
+        return services.vaultAndUpdates().getFirst();
+    }
+
+    @GET
+    @Path("issuers")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<String> getIssuers() {
+        updateIssuers();
+        return issuers.stream().map(Party::getName).collect(toList());
+    }
+
+    @GET
     @Path("peers")
     @Produces(MediaType.APPLICATION_JSON)
     public Map<String, List<String>> getPeers() {
@@ -126,5 +140,17 @@ public class ExampleApi {
                 .collect(toList());
     }
 
+    private void updateIssuers() {
+        issuers = new ArrayList<>();
+        for (NodeInfo nodeInfo :
+                services.networkMapUpdates().getFirst()) {
+            for (ServiceEntry serviceEntry :
+                    nodeInfo.getAdvertisedServices()) {
+                if (serviceEntry.getInfo().getType().getId().contains("corda.issuer.")) {
+                    issuers.add(nodeInfo.getLegalIdentity());
+                }
+            }
+        }
+    }
 
 }

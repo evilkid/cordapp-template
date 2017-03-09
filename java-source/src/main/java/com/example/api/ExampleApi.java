@@ -49,7 +49,13 @@ public class ExampleApi {
     @Path("issue/{peerName}/{amount}")
     public String issue(@PathParam("peerName") String peerName, @PathParam("amount") int quantity) {
         System.out.println("starting");
+
+
         try {
+
+            if (notaries.isEmpty()) {
+                updateNotaries();
+            }
 
             Party party = services.partyFromName(peerName);
 
@@ -78,6 +84,9 @@ public class ExampleApi {
         if (party == null) {
             return "Peer not found";
         }
+
+
+
         try {
             System.out.println("Issuer: " + issuers.get(0));
 
@@ -125,7 +134,7 @@ public class ExampleApi {
     }
 
     @GET
-    @Path("notaries ")
+    @Path("notaries")
     @Produces(MediaType.APPLICATION_JSON)
     public List<Party> getNotaryList() {
         /*new CashCommand.IssueCash(new Amount<Currency>(10, ContractsDSL.USD), OpaqueBytes.Companion.of(1), services.nodeIdentity().getLegalIdentity() );

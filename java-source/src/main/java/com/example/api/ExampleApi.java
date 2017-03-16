@@ -216,7 +216,7 @@ public class ExampleApi {
     }
 
     @GET
-    @Path("peers/{name}")
+    @Path("notaries/{name}")
     @Produces(MediaType.APPLICATION_JSON)
     public Party getNotariesByName(@PathParam("name") String name) {
         updateIssuers();

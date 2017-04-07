@@ -1,5 +1,6 @@
 package com.example.api;
 
+import com.example.flow.ExampleFlow;
 import net.corda.core.contracts.*;
 import net.corda.core.crypto.Party;
 import net.corda.core.crypto.SecureHash;
@@ -47,33 +48,41 @@ public class ExampleApi {
     }
 
     @GET
-    @Path("issue/{peerName}/{amount}")
-    public String issue(@PathParam("peerName") String peerName, @PathParam("amount") int quantity) {
-        System.out.println("starting");
-
-
+    @Path("issue/{peerName}/{amount}/{currency}")
+    public String issueCurrency(@PathParam("peerName") String peerName, @PathParam("amount") int quantity, @PathParam("currency") String currency) {
         try {
-
-            if (notaries.isEmpty()) {
-                updateNotaries();
-            }
-
-            Party party = services.partyFromName(peerName);
-
-
-            CashFlowCommand.IssueCash cash = new CashFlowCommand.IssueCash(new Amount<>((long) quantity, ContractsDSL.USD), OpaqueBytes.Companion.of((byte) 1), party, notaries.get(0));
-            System.out.println("created");
-
-            FlowHandle handle = services.startFlowDynamic(IssuerFlow.IssuanceRequester.class, cash.getAmount(), cash.getRecipient(), cash.getIssueRef(), services.nodeIdentity().getLegalIdentity());
-            System.out.println("handeled");
-            SignedTransaction signedTransaction = (SignedTransaction) handle.getReturnValue().get(10 * 1000, TimeUnit.MILLISECONDS);
-            System.out.println("exec");
-
-            return signedTransaction.getId().toString();
+            return issueMoney(peerName, quantity, ContractsDSL.currency(currency));
         } catch (Exception e) {
             e.printStackTrace();
             return e.getMessage();
         }
+    }
+
+    @GET
+    @Path("issue/{peerName}/{amount}")
+    public String issue(@PathParam("peerName") String peerName, @PathParam("amount") int quantity) {
+        try {
+            return issueMoney(peerName, quantity, ContractsDSL.USD);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return e.getMessage();
+        }
+    }
+
+    private String issueMoney(String peerName, long quantity, Currency currency) throws Exception {
+        if (notaries.isEmpty()) {
+            updateNotaries();
+        }
+
+        Party party = services.partyFromName(peerName);
+
+
+        CashFlowCommand.IssueCash cash = new CashFlowCommand.IssueCash(new Amount<>(quantity, currency), OpaqueBytes.Companion.of((byte) 1), party, notaries.get(0));
+
+        FlowHandle handle = services.startFlowDynamic(IssuerFlow.IssuanceRequester.class, cash.getAmount(), cash.getRecipient(), cash.getIssueRef(), services.nodeIdentity().getLegalIdentity());
+        SignedTransaction signedTransaction = (SignedTransaction) handle.getReturnValue().get(10 * 1000, TimeUnit.MILLISECONDS);
+
+        return signedTransaction.getId().toString();
     }
 
     @GET
@@ -88,9 +97,6 @@ public class ExampleApi {
         }
 
         try {
-            System.out.println("Issuer: " + issuers.get(0));
-
-
             Amount<Issued<Currency>> amount = new Amount<>(quantity, new Issued<>(new PartyAndReference(issuers.get(0), OpaqueBytes.Companion.of((byte) 1)), ContractsDSL.USD));
             CashFlowCommand.PayCash cash = new CashFlowCommand.PayCash(amount, party);
 
@@ -131,6 +137,26 @@ public class ExampleApi {
         }
 
     }
+
+/*    @GET
+    @Path("exit/{amount}")
+    public String exit(@PathParam("amount") int quantity) {
+
+        try {
+            Amount<Currency> amount = new Amount<>(quantity, ContractsDSL.USD);
+
+            CashFlowCommand.ExitCash exitCash = new CashFlowCommand.ExitCash(amount,
+                    issuers.get(0).ref(OpaqueBytes.Companion.of((byte) 1)).getReference());
+
+            FlowHandle<SignedTransaction> handle = exitCash.startFlow(services);
+
+            System.out.println(handle.getReturnValue().get().getClass());
+
+            return handle.getReturnValue().toString();
+        } catch (Exception e) {
+            return e.getMessage();
+        }
+    }*/
 
     @GET
     @Path("vault")
@@ -232,6 +258,25 @@ public class ExampleApi {
     public Map<String, String> whoami() {
         return singletonMap("me", myLegalName);
     }
+
+    @GET
+    @Path("exchange/{amount}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public String test(@PathParam("amount") int quantity) {
+
+        Amount<Issued<Currency>> amount = new Amount<>(quantity, new Issued<>(new PartyAndReference(issuers.get(0), OpaqueBytes.Companion.of((byte) 1)), ContractsDSL.USD));
+
+        FlowHandle a = services.startFlowDynamic(ExampleFlow.MasterFxFlow.class, services.partyFromName("NodeB"), services.partyFromName("NodeC"), amount);
+
+        try {
+            a.getReturnValue().get();
+        } catch (Exception e) {
+            System.out.println("error: " + e.getMessage());
+        }
+
+        return "done";
+    }
+
 
     private void updatePeers() {
         peers = new ArrayList<>();

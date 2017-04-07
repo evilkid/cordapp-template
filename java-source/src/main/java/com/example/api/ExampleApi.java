@@ -262,7 +262,7 @@ public class ExampleApi {
     @GET
     @Path("exchange/{amount}")
     @Produces(MediaType.APPLICATION_JSON)
-    public String test(@PathParam("amount") int quantity) {
+    public String exchange(@PathParam("amount") int quantity) {
 
         Amount<Issued<Currency>> amount = new Amount<>(quantity, new Issued<>(new PartyAndReference(issuers.get(0), OpaqueBytes.Companion.of((byte) 1)), ContractsDSL.USD));
 

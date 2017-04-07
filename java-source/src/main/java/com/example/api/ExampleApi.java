@@ -260,16 +260,20 @@ public class ExampleApi {
     }
 
     @GET
-    @Path("exchange/{amount}")
+    @Path("exchange/{recipient}/{quantity}/")
     @Produces(MediaType.APPLICATION_JSON)
-    public String exchange(@PathParam("amount") int quantity) {
+    public String exchange(@PathParam("quantity") int quantity, @PathParam("recipient") String recipient) {
 
         Amount<Issued<Currency>> amount = new Amount<>(quantity, new Issued<>(new PartyAndReference(issuers.get(0), OpaqueBytes.Companion.of((byte) 1)), ContractsDSL.USD));
 
-        FlowHandle a = services.startFlowDynamic(ExampleFlow.MasterFxFlow.class, services.partyFromName("NodeB"), services.partyFromName("NodeC"), amount);
+        FlowHandle flowHandle = services.startFlowDynamic(
+                ExampleFlow.MasterFxFlow.class,
+                services.partyFromName(recipient),
+                services.partyFromName("NodeC"),
+                amount);
 
         try {
-            a.getReturnValue().get();
+            flowHandle.getReturnValue().get();
         } catch (Exception e) {
             System.out.println("error: " + e.getMessage());
         }

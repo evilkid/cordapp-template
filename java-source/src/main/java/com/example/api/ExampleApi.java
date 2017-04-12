@@ -296,9 +296,9 @@ public class ExampleApi {
                 amount);
 
         try {
-            flowHandle.getReturnValue().get();
+            return ((SignedTransaction)flowHandle.getReturnValue().get()).getId().toString();
         } catch (Exception e) {
-            System.out.println("error: " + e.getMessage());
+            System.out.println("error1: " + e.getMessage());
         }
 
         return "done";

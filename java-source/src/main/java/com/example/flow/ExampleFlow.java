@@ -22,7 +22,7 @@ import java.util.List;
  */
 public class ExampleFlow {
 
-    public static class MasterFxFlow extends FlowLogic<Void> {
+    public static class MasterFxFlow extends FlowLogic<SignedTransaction> {
 
         private final Party fxTrader;
         private final Party receiver;
@@ -63,7 +63,7 @@ public class ExampleFlow {
 
         @Override
         @Suspendable
-        public Void call() throws FlowException {
+        public SignedTransaction call() throws FlowException {
 
 
             System.out.println("sending receive...");
@@ -80,11 +80,12 @@ public class ExampleFlow {
 
 //            Object o = sendAndReceive(SignedTransaction.class, fxTrader, new ExchangeInfo(tx, receiver, amount.getQuantity(), currencies.get(0)));
 
-            Object o = subFlow(new ExchangeInitiator(new ExchangeInfo(tx, receiver, amount.getQuantity(), currencies.get(0)), fxTrader));
+            SignedTransaction ftx = subFlow(new ExchangeInitiator(new ExchangeInfo(tx, receiver, amount.getQuantity(), currencies.get(0)), fxTrader));
 
-            System.out.println("got :" + o);
+            System.out.println("waiting...");
+            System.out.println("done");
 
-            return null;
+            return ftx;
         }
     }
 
@@ -170,13 +171,12 @@ public class ExampleFlow {
                     )
             );
 
-            System.out.println(amount);
+            System.out.println("execing");
+            SignedTransaction signedTransaction = subFlow(new CashPaymentFlow(amount, info.receiver));
 
-            CashPaymentFlow cashPaymentFlow = new CashPaymentFlow(amount, info.receiver);
+            send(otherParty, signedTransaction);
 
-            SignedTransaction tx = subFlow(cashPaymentFlow);
-            System.out.println("done transaction: " + tx);
-            return tx;
+            return signedTransaction;
         }
     }
 

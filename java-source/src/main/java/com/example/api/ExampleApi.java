@@ -1,6 +1,7 @@
 package com.example.api;
 
 import com.example.flow.ExampleFlow;
+import com.google.common.collect.ImmutableMap;
 import net.corda.core.contracts.*;
 import net.corda.core.crypto.Party;
 import net.corda.core.crypto.SecureHash;
@@ -257,6 +258,18 @@ public class ExampleApi {
     @Produces(MediaType.APPLICATION_JSON)
     public Map<String, String> whoami() {
         return singletonMap("me", myLegalName);
+    }
+
+    @GET
+    @Path("/identity")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Map<String, Object> getLegalItendidty() {
+        return ImmutableMap.of(
+                "name", services.nodeIdentity().getLegalIdentity().getName(),
+                "token", services.nodeIdentity().getLegalIdentity().getOwningKey(),
+                "PhysicalLocation", services.nodeIdentity().getPhysicalLocation(),
+                "address", services.nodeIdentity().getAddress()
+        );
     }
 
     @GET

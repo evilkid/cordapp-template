@@ -3,6 +3,7 @@ package com.example.api;
 import com.example.flow.ExampleFlow;
 import com.google.common.collect.ImmutableMap;
 import net.corda.core.contracts.*;
+import net.corda.core.crypto.CompositeKey;
 import net.corda.core.crypto.Party;
 import net.corda.core.crypto.SecureHash;
 import net.corda.core.messaging.CordaRPCOps;
@@ -233,6 +234,13 @@ public class ExampleApi {
     }
 
     @GET
+    @Path("/peers/hash/{hash}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Party peerByHash(@PathParam("hash") String  hash){
+        return services.partyFromKey(CompositeKey.Companion.parseFromBase58(hash));
+    }
+
+    @GET
     @Path("notaries")
     @Produces(MediaType.APPLICATION_JSON)
     public List<Party> getNotaryList() {
@@ -241,6 +249,8 @@ public class ExampleApi {
         }
         return notaries;
     }
+
+
 
     @GET
     @Path("notaries/{name}")
@@ -263,7 +273,7 @@ public class ExampleApi {
     @GET
     @Path("/identity")
     @Produces(MediaType.APPLICATION_JSON)
-    public Map<String, Object> getLegalItendidty() {
+    public Map<String, Object> getLegalIdentity() {
         return ImmutableMap.of(
                 "name", services.nodeIdentity().getLegalIdentity().getName(),
                 "token", services.nodeIdentity().getLegalIdentity().getOwningKey(),

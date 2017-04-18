@@ -31,6 +31,7 @@ dependencies {
     compile "net.corda:core:$corda_version"
     compile "net.corda:finance:$corda_version"
     compile "net.corda:node:$corda_version"
+    compile "net.corda:jackson:0.10.1"
     runtime "net.corda:corda:$corda_version"
     runtime "net.corda:corda-webserver:$corda_version"
 

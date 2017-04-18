@@ -76,3 +76,5 @@ crashlytics-build.properties
 # docs related
 docs/virtualenv/
 /gradle.properties
+
+gradle.properties

@@ -1,6 +1,10 @@
 package com.example.api;
 
 import com.example.flow.ExampleFlow;
+import com.example.models.CurrencyRate;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import net.corda.core.contracts.*;
 import net.corda.core.crypto.CompositeKey;
@@ -14,13 +18,11 @@ import net.corda.core.serialization.OpaqueBytes;
 import net.corda.core.transactions.SignedTransaction;
 import net.corda.flows.CashFlowCommand;
 import net.corda.flows.IssuerFlow;
+import net.corda.jackson.JacksonSupport;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
-import java.util.ArrayList;
-import java.util.Currency;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import static java.util.Collections.singletonMap;
@@ -236,7 +238,7 @@ public class ExampleApi {
     @GET
     @Path("/peers/hash/{hash}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Party peerByHash(@PathParam("hash") String  hash){
+    public Party peerByHash(@PathParam("hash") String hash) {
         return services.partyFromKey(CompositeKey.Companion.parseFromBase58(hash));
     }
 
@@ -249,7 +251,6 @@ public class ExampleApi {
         }
         return notaries;
     }
-
 
 
     @GET
@@ -268,6 +269,51 @@ public class ExampleApi {
     @Produces(MediaType.APPLICATION_JSON)
     public Map<String, String> whoami() {
         return singletonMap("me", myLegalName);
+    }
+
+    @GET
+    @Path("rates/{from}/{to}/{rate}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Set<CurrencyRate> addRates(@PathParam("from") String from, @PathParam("to") String to, @PathParam("rate") float rate) {
+        ObjectMapper json = JacksonSupport.createNonRpcMapper();
+        Set<CurrencyRate> rates = getRates();
+
+
+        //replace
+        if (!rates.add(new CurrencyRate(from, to, rate))) {
+            rates.remove(new CurrencyRate(from, to, rate));
+            rates.add(new CurrencyRate(from, to, rate));
+        }
+
+        try {
+            services.addVaultTransactionNote(SecureHash.sha256("rates"), json.writeValueAsString(rates));
+            return rates;
+        } catch (JsonProcessingException e) {
+            return null;
+        }
+    }
+
+    @GET
+    @Path("rates")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Set<CurrencyRate> getRates() {
+        ObjectMapper json = JacksonSupport.createNonRpcMapper();
+
+        try {
+            Iterable<String> ratesIterator = services.getVaultTransactionNotes(SecureHash.sha256("rates"));
+            String rat = getLastElement(ratesIterator);
+
+            System.out.println(rat);
+
+            if (rat != null && !rat.isEmpty()) {
+                return json.readValue(rat, new TypeReference<Set<CurrencyRate>>() {
+                });
+
+            }
+        } catch (Exception e) {
+            return new HashSet<>();
+        }
+        return new HashSet<>();
     }
 
     @GET
@@ -296,7 +342,7 @@ public class ExampleApi {
                 amount);
 
         try {
-            return ((SignedTransaction)flowHandle.getReturnValue().get()).getId().toString();
+            return ((SignedTransaction) flowHandle.getReturnValue().get()).getId().toString();
         } catch (Exception e) {
             System.out.println("error1: " + e.getMessage());
         }
@@ -342,4 +388,15 @@ public class ExampleApi {
         }
     }
 
+
+    public static <T> T getLastElement(final Iterable<T> elements) {
+        final Iterator<T> itr = elements.iterator();
+        T lastElement = itr.next();
+
+        while (itr.hasNext()) {
+            lastElement = itr.next();
+        }
+
+        return lastElement;
+    }
 }

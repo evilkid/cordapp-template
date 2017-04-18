@@ -20,13 +20,13 @@ public class CurrencyRate {
     }
 
     public CurrencyRate(String from, String to, float rate) {
-        this.from = from;
-        this.to = to;
+        this.from = from.toUpperCase();
+        this.to = to.toUpperCase();
         this.rate = rate;
     }
 
     public String getFrom() {
-        return from;
+        return from.toUpperCase();
     }
 
     public void setFrom(String from) {
@@ -34,7 +34,7 @@ public class CurrencyRate {
     }
 
     public String getTo() {
-        return to;
+        return to.toUpperCase();
     }
 
     public void setTo(String to) {

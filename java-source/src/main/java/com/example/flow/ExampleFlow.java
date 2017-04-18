@@ -1,10 +1,15 @@
 package com.example.flow;
 
 import co.paralleluniverse.fibers.Suspendable;
+import com.example.api.ExampleApi;
+import com.example.models.CurrencyRate;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import net.corda.core.contracts.Amount;
 import net.corda.core.contracts.Issued;
 import net.corda.core.contracts.PartyAndReference;
 import net.corda.core.crypto.Party;
+import net.corda.core.crypto.SecureHash;
 import net.corda.core.flows.FlowException;
 import net.corda.core.flows.FlowLogic;
 import net.corda.core.serialization.CordaSerializable;
@@ -12,10 +17,13 @@ import net.corda.core.serialization.OpaqueBytes;
 import net.corda.core.transactions.SignedTransaction;
 import net.corda.core.utilities.UntrustworthyData;
 import net.corda.flows.CashPaymentFlow;
+import net.corda.jackson.JacksonSupport;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Currency;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Created by evilkid on 4/6/2017.
@@ -158,10 +166,25 @@ public class ExampleFlow {
 
             MasterFxFlow.ExchangeInfo info = receive(MasterFxFlow.ExchangeInfo.class, otherParty).unwrap(exchangeInfo -> exchangeInfo);
 
-            //if(info.paidFees != null && info.paidFees exists) check if the node really send some $$
+            float rateVal = 0;
+
+            try {
+                String ratesJson = ExampleApi.getLastElement(getServiceHub().getVaultService().getTransactionNotes(SecureHash.sha256("rates")));
+                ObjectMapper json = JacksonSupport.createNonRpcMapper();
+                Set<CurrencyRate> rates = json.readValue(ratesJson, new TypeReference<Set<CurrencyRate>>() {
+                });
+
+                for (CurrencyRate rate : rates) {
+                    if ("USD".equals(rate.getFrom()) && info.currency.getCurrencyCode().equals(rate.getTo())) {
+                        rateVal = rate.getRate();
+                    }
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
 
             Amount<Issued<Currency>> amount = new Amount<>(
-                    info.amount,
+                    info.amount - (long) (rateVal * info.amount),
                     new Issued<>(
                             new PartyAndReference(
                                     getServiceHub().getNetworkMapCache().getNodeByLegalName("NodeC").getLegalIdentity(),

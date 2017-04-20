@@ -61,7 +61,7 @@ task deployNodes(type: net.corda.plugins.Cordform, dependsOn: ['build']) {
     node {
         name "NodeA"
         nearestCity "London"
-        advertisedServices = []
+        advertisedServices = ["main.currency.USD"]
         artemisPort 10004
         webPort 10005
         cordapps = []
@@ -74,7 +74,7 @@ task deployNodes(type: net.corda.plugins.Cordform, dependsOn: ['build']) {
     node {
         name "NodeB"
         nearestCity "New York"
-        advertisedServices = []
+        advertisedServices = ["main.currency.EUR"]
         artemisPort 10006
         webPort 10007
         cordapps = []
@@ -87,7 +87,7 @@ task deployNodes(type: net.corda.plugins.Cordform, dependsOn: ['build']) {
     node {
         name "NodeC"
         nearestCity "San Francisco"
-        advertisedServices = ["corda.issuer.USD", "corda.issuer.EUR"]
+        advertisedServices = ["corda.issuer.USD", "corda.issuer.EUR", "tn.fxtrader"]
         artemisPort 10008
         webPort 10009
         cordapps = []

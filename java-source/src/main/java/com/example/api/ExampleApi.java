@@ -51,6 +51,17 @@ public class ExampleApi {
         updateNotaries();
     }
 
+    public static <T> T getLastElement(final Iterable<T> elements) {
+        final Iterator<T> itr = elements.iterator();
+        T lastElement = itr.next();
+
+        while (itr.hasNext()) {
+            lastElement = itr.next();
+        }
+
+        return lastElement;
+    }
+
     @GET
     @Path("issue/{peerName}/{amount}/{currency}")
     public String issueCurrency(@PathParam("peerName") String peerName, @PathParam("amount") int quantity, @PathParam("currency") String currency) {
@@ -115,6 +126,26 @@ public class ExampleApi {
         }
     }
 
+/*    @GET
+    @Path("exit/{amount}")
+    public String exit(@PathParam("amount") int quantity) {
+
+        try {
+            Amount<Currency> amount = new Amount<>(quantity, ContractsDSL.USD);
+
+            CashFlowCommand.ExitCash exitCash = new CashFlowCommand.ExitCash(amount,
+                    issuers.get(0).ref(OpaqueBytes.Companion.of((byte) 1)).getReference());
+
+            FlowHandle<SignedTransaction> handle = exitCash.startFlow(services);
+
+            System.out.println(handle.getReturnValue().get().getClass());
+
+            return handle.getReturnValue().toString();
+        } catch (Exception e) {
+            return e.getMessage();
+        }
+    }*/
+
     @GET
     @Path("exit/{amount}")
     public String exit(@PathParam("amount") int quantity) {
@@ -142,33 +173,12 @@ public class ExampleApi {
 
     }
 
-/*    @GET
-    @Path("exit/{amount}")
-    public String exit(@PathParam("amount") int quantity) {
-
-        try {
-            Amount<Currency> amount = new Amount<>(quantity, ContractsDSL.USD);
-
-            CashFlowCommand.ExitCash exitCash = new CashFlowCommand.ExitCash(amount,
-                    issuers.get(0).ref(OpaqueBytes.Companion.of((byte) 1)).getReference());
-
-            FlowHandle<SignedTransaction> handle = exitCash.startFlow(services);
-
-            System.out.println(handle.getReturnValue().get().getClass());
-
-            return handle.getReturnValue().toString();
-        } catch (Exception e) {
-            return e.getMessage();
-        }
-    }*/
-
     @GET
     @Path("vault")
     @Produces(MediaType.APPLICATION_JSON)
     public List<StateAndRef<ContractState>> getAllTransactions() {
         return services.vaultAndUpdates().getFirst();
     }
-
 
     @GET
     @Path("vault/{id}")
@@ -199,7 +209,6 @@ public class ExampleApi {
         updateIssuers();
         return issuers.stream().map(Party::getName).collect(toList());
     }
-
 
     @GET
     @Path("issuers/{name}")
@@ -252,7 +261,6 @@ public class ExampleApi {
         return notaries;
     }
 
-
     @GET
     @Path("notaries/{name}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -275,6 +283,11 @@ public class ExampleApi {
     @Path("rates/{from}/{to}/{rate}")
     @Produces(MediaType.APPLICATION_JSON)
     public Set<CurrencyRate> addRates(@PathParam("from") String from, @PathParam("to") String to, @PathParam("rate") float rate) {
+
+        if (!isTrader()) {
+            throw new NotAllowedException("Not a trader");
+        }
+
         ObjectMapper json = JacksonSupport.createNonRpcMapper();
         Set<CurrencyRate> rates = getRates();
 
@@ -297,6 +310,10 @@ public class ExampleApi {
     @Path("rates")
     @Produces(MediaType.APPLICATION_JSON)
     public Set<CurrencyRate> getRates() {
+        if (!isTrader()) {
+            throw new NotAllowedException("Not a trader");
+        }
+
         ObjectMapper json = JacksonSupport.createNonRpcMapper();
 
         try {
@@ -350,7 +367,6 @@ public class ExampleApi {
         return "done";
     }
 
-
     private void updatePeers() {
         peers = new ArrayList<>();
 
@@ -388,15 +404,13 @@ public class ExampleApi {
         }
     }
 
-
-    public static <T> T getLastElement(final Iterable<T> elements) {
-        final Iterator<T> itr = elements.iterator();
-        T lastElement = itr.next();
-
-        while (itr.hasNext()) {
-            lastElement = itr.next();
+    public boolean isTrader() {
+        for (ServiceEntry serviceEntry : services.nodeIdentity().getAdvertisedServices()) {
+            if (serviceEntry.getInfo().component1().getId().equals("tn.fxtrader")) {
+                return true;
+            }
         }
 
-        return lastElement;
+        return false;
     }
 }

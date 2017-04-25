@@ -103,8 +103,8 @@ public class ExampleApi {
     }
 
     @GET
-    @Path("pay/{peerName}/{amount}")
-    public String pay(@PathParam("peerName") String peerName, @PathParam("amount") int quantity) {
+    @Path("pay/{peerName}/{amount}/{currency}")
+    public String pay(@PathParam("peerName") String peerName, @PathParam("amount") int quantity, @PathParam("currency") String currency) {
         System.out.println("starting");
 
         Party party = services.partyFromName(peerName);
@@ -114,7 +114,13 @@ public class ExampleApi {
         }
 
         try {
-            Amount<Issued<Currency>> amount = new Amount<>(quantity, new Issued<>(new PartyAndReference(issuers.get(0), OpaqueBytes.Companion.of((byte) 1)), ContractsDSL.USD));
+            Amount<Issued<Currency>> amount = new Amount<>(
+                    quantity,
+                    new Issued<>(new PartyAndReference(issuers.get(0), OpaqueBytes.Companion.of((byte) 1)),
+                            ContractsDSL.currency(currency)
+                    )
+            );
+            
             CashFlowCommand.PayCash cash = new CashFlowCommand.PayCash(amount, party);
 
             FlowHandle<SignedTransaction> handle = cash.startFlow(services);

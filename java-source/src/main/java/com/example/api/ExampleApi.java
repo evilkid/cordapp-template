@@ -250,8 +250,7 @@ public class ExampleApi {
                 .networkMapUpdates()
                 .getFirst()
                 .stream()
-                .filter(peer -> !peer.getLegalIdentity().getName().equals(myLegalName)
-                        && !peer.getLegalIdentity().getName().equals(NOTARY_NAME)
+                .filter(peer -> !peer.getLegalIdentity().getName().equals(NOTARY_NAME)
                         && isTrader(peer)
                 )
                 .map(nodeInfo -> new PeerInfo(nodeInfo.getLegalIdentity().getName(),

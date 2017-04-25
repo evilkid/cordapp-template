@@ -2,6 +2,7 @@ package com.example.api;
 
 import com.example.flow.ExampleFlow;
 import com.example.models.CurrencyRate;
+import com.example.models.PeerInfo;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -24,6 +25,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static java.util.Collections.singletonMap;
 import static java.util.stream.Collectors.toList;
@@ -108,7 +110,7 @@ public class ExampleApi {
         Party party = services.partyFromName(peerName);
 
         if (party == null) {
-            return "Peer not found";
+            return "PeerInfo not found";
         }
 
         try {
@@ -125,26 +127,6 @@ public class ExampleApi {
             return e.getMessage();
         }
     }
-
-/*    @GET
-    @Path("exit/{amount}")
-    public String exit(@PathParam("amount") int quantity) {
-
-        try {
-            Amount<Currency> amount = new Amount<>(quantity, ContractsDSL.USD);
-
-            CashFlowCommand.ExitCash exitCash = new CashFlowCommand.ExitCash(amount,
-                    issuers.get(0).ref(OpaqueBytes.Companion.of((byte) 1)).getReference());
-
-            FlowHandle<SignedTransaction> handle = exitCash.startFlow(services);
-
-            System.out.println(handle.getReturnValue().get().getClass());
-
-            return handle.getReturnValue().toString();
-        } catch (Exception e) {
-            return e.getMessage();
-        }
-    }*/
 
     @GET
     @Path("exit/{amount}")
@@ -224,13 +206,17 @@ public class ExampleApi {
     @GET
     @Path("peers")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<String> getPeers() {
+    public List<PeerInfo> getPeers() {
         updatePeers();
-        return services.networkMapUpdates().getFirst()
+
+        return services
+                .networkMapUpdates()
+                .getFirst()
                 .stream()
-                .map(node -> node.getLegalIdentity().getName())
-                .filter(name -> !name.equals(myLegalName) && !name.equals(NOTARY_NAME))
-                .collect(toList());
+                .filter(peer -> !peer.getLegalIdentity().getName().equals(myLegalName)
+                        && !peer.getLegalIdentity().getName().equals(NOTARY_NAME))
+                .map(nodeInfo -> new PeerInfo(nodeInfo.getLegalIdentity().getName(), nodeInfo.getPhysicalLocation()))
+                .collect(Collectors.toList());
     }
 
     @GET

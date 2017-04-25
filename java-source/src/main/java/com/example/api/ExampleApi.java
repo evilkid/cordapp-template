@@ -134,12 +134,10 @@ public class ExampleApi {
     }
 
     @GET
-    @Path("exit/{amount}")
-    public String exit(@PathParam("amount") int quantity) {
+    @Path("exit/{amount}/{currency}")
+    public String exit(@PathParam("amount") int quantity, @PathParam("currency") String currency) {
         try {
-
-
-            Amount<Currency> amount = new Amount<>((long) quantity, ContractsDSL.USD);
+            Amount<Currency> amount = new Amount<>((long) quantity, ContractsDSL.currency(currency));
 
             System.out.println(amount);
 

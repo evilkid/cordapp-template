@@ -120,15 +120,14 @@ public class ExampleApi {
                             ContractsDSL.currency(currency)
                     )
             );
-            
+
             CashFlowCommand.PayCash cash = new CashFlowCommand.PayCash(amount, party);
 
             FlowHandle<SignedTransaction> handle = cash.startFlow(services);
 
-            //SignedTransaction a = new SignedTransaction();
-            System.out.println(handle.getReturnValue().get().getClass());
+            SignedTransaction tx = handle.getReturnValue().get(10 * 1000, TimeUnit.MILLISECONDS);
 
-            return handle.getReturnValue().get(10 * 1000, TimeUnit.MILLISECONDS).toString();
+            return tx.getId().toString();
         } catch (Exception e) {
             return e.getMessage();
         }
@@ -152,8 +151,9 @@ public class ExampleApi {
 
             FlowHandle<SignedTransaction> handle = exitCash.startFlow(services);
 
+            SignedTransaction tx = handle.getReturnValue().get(10 * 1000, TimeUnit.MILLISECONDS);
 
-            return handle.getReturnValue().get(10 * 1000, TimeUnit.MILLISECONDS).toString();
+            return tx.getId().toString();
         } catch (Exception e) {
 
             return e.getMessage();
@@ -377,7 +377,7 @@ public class ExampleApi {
                 amount);
 
         try {
-            return ((SignedTransaction) flowHandle.getReturnValue().get()).getId().toString();
+            return ((SignedTransaction) flowHandle.getReturnValue().get(10 * 10000, TimeUnit.MILLISECONDS)).getId().toString();
         } catch (Exception e) {
             System.out.println("error1: " + e.getMessage());
         }

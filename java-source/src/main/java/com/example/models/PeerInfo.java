@@ -1,6 +1,7 @@
 package com.example.models;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import net.corda.core.messaging.SingleMessageRecipient;
 import net.corda.core.node.PhysicalLocation;
 import net.corda.core.node.ServiceEntry;
 
@@ -12,11 +13,13 @@ import java.util.List;
 @JsonDeserialize
 public class PeerInfo {
     private String name;
+    private SingleMessageRecipient address;
     private PhysicalLocation location;
     private List<ServiceEntry> advertisedServices;
 
-    public PeerInfo(String name, PhysicalLocation location, List<ServiceEntry> advertisedServices) {
+    public PeerInfo(String name, SingleMessageRecipient address, PhysicalLocation location, List<ServiceEntry> advertisedServices) {
         this.name = name;
+        this.address = address;
         this.location = location;
         this.advertisedServices = advertisedServices;
     }
@@ -27,6 +30,14 @@ public class PeerInfo {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public SingleMessageRecipient getAddress() {
+        return address;
+    }
+
+    public void setAddress(SingleMessageRecipient address) {
+        this.address = address;
     }
 
     public PhysicalLocation getLocation() {

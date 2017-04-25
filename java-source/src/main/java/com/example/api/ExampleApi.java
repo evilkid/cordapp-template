@@ -215,7 +215,12 @@ public class ExampleApi {
                 .stream()
                 .filter(peer -> !peer.getLegalIdentity().getName().equals(myLegalName)
                         && !peer.getLegalIdentity().getName().equals(NOTARY_NAME))
-                .map(nodeInfo -> new PeerInfo(nodeInfo.getLegalIdentity().getName(), nodeInfo.getPhysicalLocation(), nodeInfo.getAdvertisedServices()))
+                .map(nodeInfo -> new PeerInfo(nodeInfo.getLegalIdentity().getName(),
+                                nodeInfo.getAddress(),
+                                nodeInfo.getPhysicalLocation(),
+                                nodeInfo.getAdvertisedServices()
+                        )
+                )
                 .collect(Collectors.toList());
     }
 
@@ -249,7 +254,12 @@ public class ExampleApi {
                         && !peer.getLegalIdentity().getName().equals(NOTARY_NAME)
                         && isTrader(peer)
                 )
-                .map(nodeInfo -> new PeerInfo(nodeInfo.getLegalIdentity().getName(), nodeInfo.getPhysicalLocation(), nodeInfo.getAdvertisedServices()))
+                .map(nodeInfo -> new PeerInfo(nodeInfo.getLegalIdentity().getName(),
+                                nodeInfo.getAddress(),
+                                nodeInfo.getPhysicalLocation(),
+                                nodeInfo.getAdvertisedServices()
+                        )
+                )
                 .collect(Collectors.toList());
     }
 
@@ -343,6 +353,7 @@ public class ExampleApi {
                 "name", services.nodeIdentity().getLegalIdentity().getName(),
                 "token", services.nodeIdentity().getLegalIdentity().getOwningKey(),
                 "PhysicalLocation", services.nodeIdentity().getPhysicalLocation(),
+                "advertisedServices", services.nodeIdentity().getAdvertisedServices(),
                 "address", services.nodeIdentity().getAddress()
         );
     }
@@ -406,11 +417,11 @@ public class ExampleApi {
         }
     }
 
-    public boolean isTrader() {
+    private boolean isTrader() {
         return isTrader(services.nodeIdentity());
     }
 
-    public boolean isTrader(NodeInfo nodeInfo) {
+    private boolean isTrader(NodeInfo nodeInfo) {
         for (ServiceEntry serviceEntry : nodeInfo.getAdvertisedServices()) {
             if (serviceEntry.getInfo().component1().getId().equals("tn.fxtrader")) {
                 return true;

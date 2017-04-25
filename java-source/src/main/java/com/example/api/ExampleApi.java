@@ -215,7 +215,7 @@ public class ExampleApi {
                 .stream()
                 .filter(peer -> !peer.getLegalIdentity().getName().equals(myLegalName)
                         && !peer.getLegalIdentity().getName().equals(NOTARY_NAME))
-                .map(nodeInfo -> new PeerInfo(nodeInfo.getLegalIdentity().getName(), nodeInfo.getPhysicalLocation()))
+                .map(nodeInfo -> new PeerInfo(nodeInfo.getLegalIdentity().getName(), nodeInfo.getPhysicalLocation(), nodeInfo.getAdvertisedServices()))
                 .collect(Collectors.toList());
     }
 
@@ -235,6 +235,22 @@ public class ExampleApi {
     @Produces(MediaType.APPLICATION_JSON)
     public Party peerByHash(@PathParam("hash") String hash) {
         return services.partyFromKey(CompositeKey.Companion.parseFromBase58(hash));
+    }
+
+    @GET
+    @Path("/traders")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<PeerInfo> getTraders() {
+        return services
+                .networkMapUpdates()
+                .getFirst()
+                .stream()
+                .filter(peer -> !peer.getLegalIdentity().getName().equals(myLegalName)
+                        && !peer.getLegalIdentity().getName().equals(NOTARY_NAME)
+                        && isTrader(peer)
+                )
+                .map(nodeInfo -> new PeerInfo(nodeInfo.getLegalIdentity().getName(), nodeInfo.getPhysicalLocation(), nodeInfo.getAdvertisedServices()))
+                .collect(Collectors.toList());
     }
 
     @GET
@@ -391,7 +407,11 @@ public class ExampleApi {
     }
 
     public boolean isTrader() {
-        for (ServiceEntry serviceEntry : services.nodeIdentity().getAdvertisedServices()) {
+        return isTrader(services.nodeIdentity());
+    }
+
+    public boolean isTrader(NodeInfo nodeInfo) {
+        for (ServiceEntry serviceEntry : nodeInfo.getAdvertisedServices()) {
             if (serviceEntry.getInfo().component1().getId().equals("tn.fxtrader")) {
                 return true;
             }

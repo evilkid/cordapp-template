@@ -134,6 +134,33 @@ public class ExampleApi {
     }
 
     @GET
+    @Path("exchange/{recipient}/{quantity}/{currency}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public String exchange(@PathParam("quantity") int quantity, @PathParam("recipient") String recipient, @PathParam("currency") String currency) {
+
+        Amount<Issued<Currency>> amount = new Amount<>(
+                quantity,
+                new Issued<>(new PartyAndReference(issuers.get(0), OpaqueBytes.Companion.of((byte) 1)),
+                        ContractsDSL.currency(currency)
+                )
+        );
+
+        FlowHandle flowHandle = services.startFlowDynamic(
+                ExampleFlow.MasterFxFlow.class,
+                services.partyFromName(recipient),
+                services.partyFromName("NodeC"),
+                amount);
+
+        try {
+            return ((SignedTransaction) flowHandle.getReturnValue().get(10 * 10000, TimeUnit.MILLISECONDS)).getId().toString();
+        } catch (Exception e) {
+            System.out.println("error1: " + e.getMessage());
+        }
+
+        return "done";
+    }
+
+    @GET
     @Path("exit/{amount}/{currency}")
     public String exit(@PathParam("amount") int quantity, @PathParam("currency") String currency) {
         try {
@@ -359,28 +386,6 @@ public class ExampleApi {
                 "advertisedServices", services.nodeIdentity().getAdvertisedServices(),
                 "address", services.nodeIdentity().getAddress()
         );
-    }
-
-    @GET
-    @Path("exchange/{recipient}/{quantity}/")
-    @Produces(MediaType.APPLICATION_JSON)
-    public String exchange(@PathParam("quantity") int quantity, @PathParam("recipient") String recipient) {
-
-        Amount<Issued<Currency>> amount = new Amount<>(quantity, new Issued<>(new PartyAndReference(issuers.get(0), OpaqueBytes.Companion.of((byte) 1)), ContractsDSL.USD));
-
-        FlowHandle flowHandle = services.startFlowDynamic(
-                ExampleFlow.MasterFxFlow.class,
-                services.partyFromName(recipient),
-                services.partyFromName("NodeC"),
-                amount);
-
-        try {
-            return ((SignedTransaction) flowHandle.getReturnValue().get(10 * 10000, TimeUnit.MILLISECONDS)).getId().toString();
-        } catch (Exception e) {
-            System.out.println("error1: " + e.getMessage());
-        }
-
-        return "done";
     }
 
     private void updatePeers() {
